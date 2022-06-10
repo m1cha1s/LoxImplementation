@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <list>
 
 namespace Lox
 {
@@ -23,7 +24,7 @@ namespace Lox
         EQUAL,
         EQUAL_EQUAL,
         GREATER,
-        GRATER_EQUAL,
+        GREATER_EQUAL,
         LESS,
         LESS_EQUAL,
 
@@ -60,5 +61,26 @@ namespace Lox
 
         Token(TokenType type, std::string lexeme, int line);
         std::string toString();
+    };
+
+    class Scanner
+    {
+    private:
+        std::string source;
+        std::list<Token> tokens;
+        std::string error = "";
+        int line = 1;
+        int start = 0;
+        int current = 0;
+
+    public:
+        Scanner(std::string source);
+        void addToken(TokenType type);
+        void scanToken();
+        int scanTokens();
+        char advance();
+        bool match(char expected);
+        void string();
+        std::list<Token> getTokens();
     };
 }
