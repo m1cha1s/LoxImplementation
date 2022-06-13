@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <list>
+#include <vector>
 
 namespace Lox
 {
@@ -52,14 +52,38 @@ namespace Lox
         EOFile
     };
 
+    enum ValueType
+    {
+        NONE,
+        STR
+    };
+
+    union Value
+    {
+        std::string str;
+    };
+
+    class Literal
+    {
+    public:
+        Value val;
+        ValueType type;
+
+        ~Literal();
+        Literal();
+        Literal(std::string value);
+    };
+
     class Token
     {
     public:
         TokenType type;
         std::string lexeme;
         int line;
+        Literal literal;
 
-        Token(TokenType type, std::string lexeme, int line);
+        ~Token();
+        Token(TokenType type, std::string lexeme, int line, Literal literal);
         std::string toString();
     };
 
@@ -67,20 +91,29 @@ namespace Lox
     {
     private:
         std::string source;
-        std::list<Token> tokens;
+        std::vector<Token> tokens;
         std::string error = "";
         int line = 1;
         int start = 0;
         int current = 0;
 
-    public:
-        Scanner(std::string source);
         void addToken(TokenType type);
+        void addToken(TokenType type, Literal literal);
         void scanToken();
-        int scanTokens();
+
         char advance();
+        char peek();
+
+        bool isAtEnd();
         bool match(char expected);
         void string();
-        std::list<Token> getTokens();
+
+    public:
+        Scanner(std::string source);
+
+        int scanTokens();
+
+        std::vector<Token> getTokens();
+        std::string getError();
     };
 }

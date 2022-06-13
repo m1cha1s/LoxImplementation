@@ -3,9 +3,14 @@
 int main()
 {
 
-    Lox::Token tok(Lox::TokenType::COMMA, ",", 12);
+    Lox::Scanner s("{}");
 
-    std::cout << tok.toString() << "\n";
+    int err = s.scanTokens();
+
+    if (err)
+    {
+        std::cout << s.getError() << std::endl;
+    }
 
     return 0;
 }

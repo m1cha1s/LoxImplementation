@@ -2,17 +2,35 @@
 
 using namespace Lox;
 
-Token::Token(TokenType type, std::string lexeme, int line)
+// Token
+
+Token::Token(TokenType type, std::string lexeme, int line, Literal literal)
 {
     this->type = type;
     this->lexeme = lexeme;
     this->line = line;
+    this->literal = literal;
 }
 
 std::string Token::toString()
 {
     return std::to_string(type) + " " + lexeme;
 }
+
+// Literal
+
+Literal::Literal()
+{
+    type = NONE;
+}
+
+Literal::Literal(std::string value)
+{
+    type = STR;
+    val.str = value;
+}
+
+// Scanner
 
 Scanner::Scanner(std::string source)
 {
@@ -23,6 +41,12 @@ void Scanner::addToken(TokenType type)
 {
     std::string text = source.substr(start, current);
     tokens.push_back(Token(type, text, line));
+}
+
+void Scanner::addToken(TokenType type, Literal literal)
+{
+    std::string text = source.substr(start, current);
+    tokens.push_back(Token(type, text, line, literal));
 }
 
 void Scanner::scanToken()
@@ -75,7 +99,7 @@ void Scanner::scanToken()
     case '/':
         if (match('/'))
         {
-            while (source.at(current) != '\n' && current < source.length())
+            while (peek() != '\n' && !isAtEnd())
                 advance();
         }
         else
@@ -104,7 +128,7 @@ void Scanner::scanToken()
 
 int Scanner::scanTokens()
 {
-    while (current < source.length())
+    while (!isAtEnd())
     {
         start = current;
         scanToken();
@@ -115,20 +139,25 @@ int Scanner::scanTokens()
         }
     }
 
-    tokens.push_back(Token(EOFile, "", line));
+    tokens.push_back(Token(EOFile, "", line, NULL));
 
     return 0;
 }
 
 bool Scanner::match(char expected)
 {
-    if (current >= source.length())
+    if (isAtEnd())
         return false;
-    if (source.at(current) != expected)
+    if (peek() != expected)
         return false;
 
     current++;
     return true;
+}
+
+bool Scanner::isAtEnd()
+{
+    return current >= source.length();
 }
 
 char Scanner::advance()
@@ -136,11 +165,40 @@ char Scanner::advance()
     return source.at(current++);
 }
 
-std::list<Token> Scanner::getTokens()
+char Scanner::peek()
+{
+    if (isAtEnd())
+        return '\0';
+    return source.at(current);
+}
+
+std::vector<Token> Scanner::getTokens()
 {
     return tokens;
 }
 
+std::string Scanner::getError()
+{
+    return error;
+}
+
 void Scanner::string()
 {
+    while (peek() != '"' && !isAtEnd())
+    {
+        if (peek() == '\n')
+            line++;
+        advance();
+    }
+
+    if (isAtEnd())
+    {
+        error = line + " Unterminated string.";
+        return;
+    }
+
+    advance();
+
+    Literal val(source.substr(start + 1, current - 1));
+    addToken(STRING, val);
 }
